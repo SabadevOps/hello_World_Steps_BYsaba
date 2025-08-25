@@ -1,0 +1,128 @@
+💙**Jenkins–Tomcat Deployment Setup Documentation (Full Flow)**💙
+
+ * Jenkins server (Take t2.largeand ubuntu as o.s)
+  * Tomcat servers(take normal)
+
+✒️Installations on Jenkins Server✒️
+
+Java (required for Jenkins and Maven).
+Maven (build automation tool
+Jenkins (CI/CD automation server).
+Jenkins Configuration
+Started Jenkins Service
+Verified Jenkins was running on the default port (8080).
+Installed required plugins for integration:
+Deploy to Container Plugin (for Tomcat deployment).
+Maven Integration Plugin (for Maven builds).
+Eclipse Temurin JDK Plugin (for managing Java versions).
+Jenkins Restart
+Restarted Jenkins to apply plugin changes.
+Configured Global Tools
+Added JDK (Java) in Manage Jenkins → Tool Configuration.
+Added Maven with proper installation path.
+===========================================================================================================================================================================================
+✒️Installations on Tomcat Server✒️
+
+Java (runtime requirement for Tomcat).
+Apache Tomcat (application server).
+$ cd /opt 
+$ wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.108/bin/apache-tomcat-9.0.108.tar.gz    ## tar file, need to extract
+$ tar -xvzf apache-tomcat-9.0.108.tar.gz
+$ mv apache-tomcat-9.0.108 tomcat
+$ cd bin/
+$ ./startup.sh
+
+* Verify Tomcat on `http://<server-ip>:8080
+
+====================================================================================================================================================================================================================
+
+✒️Enable Remote Access (Manager & Host-Manager Apps)✒️
+
+By default, Tomcat’s `manager` and `host-manager` apps allow access only from localhost.
+Find all context.xml files:
+$find / -name context.xml
+→ Only modify inside **manager** and **host-manager**.
+Edit `host-manager` context file:
+$ vi /opt/tomcat/webapps/host-manager/META-INF/context.xml
+Comment out the `<Valve>` section:
+
+   ```xml
+   <!--
+   <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+          allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
+   -->
+   ```
+
+Edit `manager` context file:
+$ vi /opt/tomcat/webapps/manager/META-INF/context.xml
+Again, comment out the `<Valve>` section.
+
+ ```xml
+   <!--
+   <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+          allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
+   -->
+   ```
+
+4. Restart Tomcat:
+
+ $ ./shutdown.sh
+ $ ./startup.sh
+   
+📍Now the manager app is accessible from Jenkins (remote).
+====================================================================================================================================================================================================================
+✒️Create Users and Roles✒️
+
+Switch to Tomcat’s `conf` directory:
+
+   $ cd /opt/tomcat/conf/
+   $ vi tomcat-users.xml
+ 
+
+Add roles and users:
+
+   ```xml
+   <role rolename="manager-gui"/>
+   <role rolename="manager-script"/>
+   <role rolename="manager-jmx"/>
+   <role rolename="manager-status"/>
+
+   <user username="admin" password="admin" roles="manager-gui,manager-script,manager-jmx,manager-status"/>
+   <user username="deployer" password="deployer" roles="manager-script"/>
+   <user username="tomcat" password="s3cret" roles="manager-gui"/>
+   ```
+
+ 🤷‍♂️(Optional) Create **shortcut commands** to start/stop Tomcat:
+
+   $ ln -s /opt/tomcat/bin/startup.sh /usr/local/bin/tomcatup
+   $ ln -s /opt/tomcat/bin/shutdown.sh /usr/local/bin/tomcatdown
+  ================================================================================================================================================================================================================= 
+ ✒️Jenkins–Tomcat Integration✒️
+
+   Add Tomcat Credentials to Jenkins
+
+   * Go to: *Manage Jenkins → Credentials → Global → Add Credentials*
+   * Add the **deployer user** credentials (`username=deployer`, `password=deployer`)
+
+    Install Deploy to Container Plugin**
+    Ensures Jenkins can send WAR to Tomcat.
+===================================================================================================================================================================================================================
+✒️Create a Maven Job✒️
+     Job Type: *Freestyle Project*
+     Configure **Git repository** (source code)
+     Build Step: *Invoke top-level Maven targets* → `clean install`
+     Post-build Action: *Deploy war/ear to a container*
+
+     * WAR/EAR files: `**/target/*.war`
+     * Credentials: `deployer` user
+     * Tomcat URL: `http://<tomcat-ip>:8080/manager/text`
+Save & Build
+📍Jenkins pulls source → Maven builds WAR → WAR deployed to Tomcat → App accessible.
+===================================================================================================================================================================================================================
+💛Deployment Workflow (Summary)💛
+
+  Developer** pushes code → Git
+  Jenkins** builds → Maven packages WAR
+  Deploy to Container plugin** connects to Tomcat (using `deployer` credentials)
+  WAR deployed → Accessible in Tomcat webapps → End User can view app
+
