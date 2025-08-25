@@ -40,7 +40,7 @@ $ ./startup.sh
 
 By default, Tomcat’s `manager` and `host-manager` apps allow access only from localhost.
 Find all context.xml files:
-$find / -name context.xml
+$ find / -name context.xml
 → Only modify inside **manager** and **host-manager**.
 Edit `host-manager` context file:
 $ vi /opt/tomcat/webapps/host-manager/META-INF/context.xml
