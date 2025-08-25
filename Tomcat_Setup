@@ -1,12 +1,12 @@
 💙**Jenkins–Tomcat Deployment Setup Documentation (Full Flow)**💙
-
- * Jenkins server (Take t2.largeand ubuntu as o.s)
-  * Tomcat servers(take normal)
+   Need to create 2 EC2
+   Jenkins server (Take t2.large and ubuntu as o.s)
+   Tomcat servers(take normal)
 
 ✒️Installations on Jenkins Server✒️
 
 Java (required for Jenkins and Maven).
-Maven (build automation tool
+Maven (build automation tool)
 Jenkins (CI/CD automation server).
 Jenkins Configuration
 Started Jenkins Service
@@ -18,8 +18,8 @@ Eclipse Temurin JDK Plugin (for managing Java versions).
 Jenkins Restart
 Restarted Jenkins to apply plugin changes.
 Configured Global Tools
-Added JDK (Java) in Manage Jenkins → Tool Configuration.
-Added Maven with proper installation path.
+Add JDK (Java) in Manage Jenkins → Tool Configuration.
+Add Maven with proper installation path.
 ===========================================================================================================================================================================================
 ✒️Installations on Tomcat Server✒️
 
@@ -107,7 +107,7 @@ Add roles and users:
     Ensures Jenkins can send WAR to Tomcat.
 ===================================================================================================================================================================================================================
 ✒️Create a Maven Job✒️
-     Job Type: *Freestyle Project*
+     Job Type: *Freestyle Project/maven Job*
      Configure **Git repository** (source code)
      Build Step: *Invoke top-level Maven targets* → `clean install`
      Post-build Action: *Deploy war/ear to a container*
@@ -120,8 +120,7 @@ Save & Build
 ===================================================================================================================================================================================================================
 💛Deployment Workflow (Summary)💛
 
-  Developer** pushes code → Git
-  Jenkins** builds → Maven packages WAR
-  Deploy to Container plugin** connects to Tomcat (using `deployer` credentials)
-  WAR deployed → Accessible in Tomcat webapps → End User can view app
-
+  Developer pushes code → Git
+  Jenkins builds → Maven 
+  Deploy to Container plugin- connects to Tomcat (using `deployer` credentials)
+  
