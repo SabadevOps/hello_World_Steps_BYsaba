@@ -1,11 +1,3 @@
-Got it ✅
-I’ll create a **complete README.md** file for you. This will combine **Jenkins + Tomcat + SonarQube setup** in a structured way so you can push it to GitHub and reuse anytime.
-
-Here’s the full **README.md** 👇
-
----
-
-````markdown
 # 💙 Jenkins–Tomcat Deployment with SonarQube (CI/CD Setup) 💙
 
 This guide explains how to set up a **CI/CD pipeline** with:
@@ -311,11 +303,3 @@ pipeline {
 
 ---
 
-```
-
----
-
-👉 This is a **ready-to-push README.md** for your GitHub repo.  
-
-Do you also want me to **add architecture diagram (Jenkins → SonarQube → Tomcat)** in the README? It’ll look more professional.
-```
