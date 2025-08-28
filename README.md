@@ -26,7 +26,7 @@ The pipeline automates **build, code quality scan, and deployment**.
    java -version
 ````
 
-2. **Install Maven**
+2. Install Maven
 
    ```bash
    sudo apt install maven -y
@@ -143,7 +143,7 @@ The pipeline automates **build, code quality scan, and deployment**.
 1. **Install Java (if not installed)**
 
    ```bash
-   sudo apt install openjdk-11-jdk -y
+   sudo apt install openjdk-17-jdk -y
    ```
 
 2. **Download & Extract SonarQube**
@@ -213,37 +213,35 @@ The pipeline automates **build, code quality scan, and deployment**.
 
 ## 🔑 6. Jenkins Credentials Setup
 
-In **Jenkins → Manage Jenkins → Credentials → Global**:
+Jenkins → Manage Jenkins → Plugins → SonarQube
+Jenkins → Manage Jenkins → Credentials → Global
 
-* **Tomcat credentials:**
+Tomcat credentials:
   ID = `tomcat-cred`
   Username = `deployer`
   Password = `deployer`
 
-* **SonarQube token:**
+SonarQube token:
   ID = `sonar-cred`
   Secret = `squ_4cb9951d19932c61abb01b040831a73aa3d4574b`
 
 ---
 
-## 🔹 7. Freestyle Job Setup
+🔹 7. Freestyle Job Setup
 
-1. **Create Freestyle Job**
+1. reate Freestyle Job
 2. Configure Git repo
-3. **Build Step → Invoke Maven**
+3. Build Step → Invoke Maven
 
-   ```
    clean install sonar:sonar -Dsonar.projectKey=my-project -Dsonar.host.url=http://52.206.34.13:9000 -Dsonar.login=squ_4cb9951d19932c61abb01b040831a73aa3d4574b
-   ```
-4. **Post-build Action → Deploy WAR/EAR to Container**
+   
+4. Post-build Action → Deploy WAR/EAR to Container
 
    * WAR file: `**/target/*.war`
    * Credentials: `tomcat-cred`
    * Tomcat URL: `http://<tomcat-ip>:8080/manager/text`
 
----
-
-## 📜 8. Jenkins Pipeline (Alternative)
+📜 8. Jenkins Pipeline (Alternative)
 
 ```groovy
 pipeline {
