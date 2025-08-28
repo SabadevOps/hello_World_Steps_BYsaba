@@ -1,0 +1,177 @@
+# 🚀 Jenkins CI/CD Pipeline with SonarQube (H2 DB) and Tomcat
+
+This documentation explains how to:
+
+1. Install and configure **SonarQube** on Ubuntu (with embedded database).
+2. Configure Jenkins with SonarQube.
+3. Deploy Java application on **Tomcat** server via Jenkins pipeline.
+
+---
+
+## 🔧 1. Prerequisites
+
+* **Ubuntu 20.04/22.04 server**
+* **Java 11+ installed**
+* **Jenkins installed** (`http://<server-ip>:8080`)
+* **Tomcat installed** (`http://52.206.34.13:8081`)
+* **Maven installed**
+
+---
+
+## ⚙️ 2. Install SonarQube (with Embedded DB)
+
+### Step 1: Install Java
+
+```bash
+sudo apt update
+sudo apt install openjdk-11-jdk -y
+java -version
+```
+
+### Step 2: Download and Extract SonarQube
+
+```bash
+cd /opt
+wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.5.1.90531.zip
+sudo apt install unzip -y
+unzip sonarqube-10.5.1.90531.zip
+mv sonarqube-10.5.1.90531 sonarqube
+```
+
+### Step 3: Create SonarQube User
+
+```bash
+sudo adduser --system --no-create-home --group --disabled-login sonarqube
+sudo chown -R sonarqube:sonarqube /opt/sonarqube
+```
+
+### Step 4: Create Systemd Service
+
+```bash
+sudo vi /etc/systemd/system/sonarqube.service
+```
+
+Add:
+
+```
+[Unit]
+Description=SonarQube service
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+
+User=sonarqube
+Group=sonarqube
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Step 5: Start SonarQube
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable sonarqube
+sudo systemctl start sonarqube
+```
+
+Check status:
+
+```bash
+sudo systemctl status sonarqube
+```
+
+### Step 6: Access SonarQube
+
+* Open in browser: `http://<server-ip>:9000`
+* Default login:
+
+  * **Username:** `admin`
+  * **Password:** `admin`
+
+### Step 7: Generate Token
+
+Go to: **My Account → Security → Generate Token**
+👉 Example: `squ_4cb9951d19932c61abb01b040831a73aa3d4574b`
+
+---
+
+## 🔑 3. Jenkins Credential Setup
+
+In **Jenkins → Manage Jenkins → Credentials**, add:
+
+* **Tomcat credentials:** ID = `tomcat-cred`
+* **SonarQube token:** ID = `sonar-cred`
+
+---
+
+## 🔹 Option 1: Freestyle Job (Post-build Action)
+
+1. Go to your Jenkins job → **Configure**.
+2. Under **Build** → Add a step → **Invoke top-level Maven targets**.
+
+   * In **Goals and options** paste:
+
+     ```
+     clean install sonar:sonar -Dsonar.projectKey=my-project -Dsonar.host.url=http://52.206.34.13:9000 -Dsonar.login=squ_4cb9951d19932c61abb01b040831a73aa3d4574b
+     ```
+3. Save and Build.
+4. Jenkins will:
+
+   * Compile/package project
+   * Run SonarQube scan as part of the build
+
+If you want it only as a **post-build action**, add it under → **Post-build Actions → Invoke top-level Maven targets** (same command as above).
+
+---
+
+
+🔎 **Recommendation**:
+
+* If this is a one-off job → use **Freestyle Post-build Action**.
+* If you’re setting up CI/CD → use **Pipeline** (more flexible, reusable).
+
+## 📜 4. Jenkins Pipeline Script
+
+Create a **Jenkinsfile** or use pipeline syntax in job:
+
+```groovy
+pipeline {
+    agent any
+
+    tools {
+        jdk 'java'
+        maven 'maven'
+    }
+
+    environment {
+        SONAR_URL = 'http://52.206.34.13:9000'
+        SONAR_TOKEN = 'squ_4cb9951d19932c61abb01b040831a73aa3d4574b'
+        TOMCAT_URL = 'http://52.206.34.13:8081/manager/text'
+        TOMCAT_CRED = credentials('tomcat-cred')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'master',
+                    url: 'https://github.com/SabadevOps/hello-world.git'
+            }
+        }
+
+        stage('Build & SonarQube Analysis') {
+            steps {
+                sh '''
+                    mvn clean install sonar:sonar \
+                      -Dsonar.projectKey=my-project \
+                      -Dsonar.host.url=$SONAR_URL \
+                      -Dsonar.login=$SONAR
+
+---
+
+
